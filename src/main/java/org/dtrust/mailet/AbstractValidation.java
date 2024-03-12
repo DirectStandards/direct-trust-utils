@@ -128,14 +128,14 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		reportMsg.setSubject(getReportSubject() + " " + sendAddr.toString());
 		reportMsg.setFrom(reportSender);
 
+		Collection<InternetAddress> reportAddresses = new ArrayList<InternetAddress>();
+		reportAddresses.addAll(reportRecips);
 
 		final Collection<InternetAddress> additionalAddresses = this.getAdditionalReportAddrs(sendAddr.getAddress());
 		if (additionalAddresses != null) {
-			for (InternetAddress additionalAddress : additionalAddresses) {
-				reportRecips.add(additionalAddress);
-			}
+			reportAddresses.addAll(additionalAddresses);
 		}
-		reportMsg.addRecipients(RecipientType.TO, reportRecips.toArray(new InternetAddress[reportRecips.size()]));
+		reportMsg.addRecipients(RecipientType.TO, reportAddresses.toArray(new InternetAddress[reportAddresses.size()]));
 
 		reportMsg.setText(report.toString());
 		
