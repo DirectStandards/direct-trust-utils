@@ -13,6 +13,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.cms.RecipientId;
+import org.bouncycastle.cms.RecipientInformation;
 import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.mail.smime.SMIMEEnveloped;
 import org.nhind.config.ConfigurationServiceProxy;
@@ -70,8 +71,7 @@ public class EncrValidator
 				SMIMEEnveloped env = new SMIMEEnveloped(msg);
 
 				encrReport.encouteredOID = env.getEncryptionAlgOID();
-				if (!isValidEncryAlg(encrReport.encouteredOID))
-				{
+				if (!isValidEncryAlg(encrReport.encouteredOID)) {
 					// invalid encryption algorithm... bail
 					encrReport.encrValid = false;
 					encrReport.comment = "Invalid encryption algorithm.";
@@ -79,38 +79,38 @@ public class EncrValidator
 					return report;
 				}
 
-				
-				if (validateCertKeyUsage)
-				{
-					// get any certificates we may have for this message
-					final Collection<X509Certificate> possibleEncCerts = getRecipCerts(recips,proxy);
-					
-					// makes sure that the sending system only encrypt with certificates that have the key encipherment bit
-		            for (X509Certificate decryptCert : possibleEncCerts)
-		            {   
-			            final RecipientId recId = generateRecipientSelector(decryptCert);
-				
-			            // check if this certificate is in the message
-				        final RecipientInformationStore recipients = env.getRecipientInfos();
-				        final DirectRecipientInformation recipient = (new DefaultDirectRecipientInformationFactory("BC")).createInstance(recipients.get(recId), env);	
-				        if (recipient == null)
-				        	continue; // certificate is not in the message... move on
-		
-				        // this certificate is in the message
-				        // validate that the sender only uses certificates that assert
-				        // the key encipherment key usage
-				        boolean[] usages = decryptCert.getKeyUsage();
-				        // key encipherment is at location [2]
-				        if (usages == null || !usages[2])
-				        {
+
+				// get any certificates we may have for this message
+				final Collection<X509Certificate> possibleEncCerts = getRecipCerts(recips, proxy);
+
+				// makes sure that the sending system only encrypt with certificates that have the key encipherment bit
+				for (X509Certificate decryptCert : possibleEncCerts) {
+					final RecipientId recId = generateRecipientSelector(decryptCert);
+
+					// check if this certificate is in the message
+					final RecipientInformationStore recipients = env.getRecipientInfos();
+					final DirectRecipientInformation recipient = (new DefaultDirectRecipientInformationFactory("BC")).createInstance(recipients.get(recId), env);
+					if (recipient == null)
+						continue; // certificate is not in the message... move on
+
+					recipients.getRecipients().iterator().next();
+					RecipientInformation recipientInformation = (RecipientInformation) recipients.getRecipients().iterator().next();
+					encrReport.keyEncryptionOID = recipientInformation.getKeyEncryptionAlgOID();
+
+					if (validateCertKeyUsage) {
+						// this certificate is in the message
+						// validate that the sender only uses certificates that assert
+						// the key encipherment key usage
+						boolean[] usages = decryptCert.getKeyUsage();
+						// key encipherment is at location [2]
+						if (usages == null || !usages[2]) {
 							// invalid key usage
 							encrReport.encrValid = false;
 							encrReport.comment = "A certificate used to encrypt the message did not assert the key encipherment key usage flag";
 							report.encrReport = encrReport;
 							return report;
-				        }
-				       
-		            }
+						}
+					}
 				}
 				
 				encrReport.encrValid = true;

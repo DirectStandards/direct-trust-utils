@@ -1,5 +1,7 @@
 package org.dtrust.mailet;
 
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+
 public class GTABValidationReportAttr extends ValidationReportAttr
 {
 	public EncryReport encrReport;
@@ -18,6 +20,7 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 		
 		public boolean encrValid;
 		public String encouteredOID;
+		public String keyEncryptionOID;
 		public String comment;
 		
 		public EncryReport()
@@ -25,6 +28,7 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 			encrValid = false;
 			encouteredOID = "";
 			comment = "";
+			keyEncryptionOID= "";
 		}
 	}
 	
@@ -74,6 +78,7 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 		{
 			builder.append("\tEnryption Validation Status: " + encrReport.encrValid + "\r\n");
 			builder.append("\tEncryption Alorithm OID: " + encrReport.encouteredOID + "\r\n");
+			builder.append("\tKey Encryption Alorithm OID: " + encrReport.keyEncryptionOID + "(" +  getKeyEncryptionAlgorithmFromOID(encrReport.keyEncryptionOID) + ")\r\n");
 			builder.append("\tComments: " + encrReport.comment + "\r\n\r\n");
 		}
 		else
@@ -84,6 +89,7 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 		builder.append("Digital Signature Validation:\r\n");
 		if (digSigReport != null)
 		{
+			builder.append("\tDigital Signature Validation Status: " + digSigReport.digSigValid + "\r\n");
 			builder.append("\tDigital Signature Validation Status: " + digSigReport.digSigValid + "\r\n");
 			builder.append("\tDigest Alorithm OID: " + digSigReport.encouteredOID + "\r\n");
 			builder.append("\tComments: " + digSigReport.comment + "\r\n\r\n");
@@ -113,5 +119,13 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 			builder.append("FAILED");
 		
 		return builder.toString();
+	}
+
+	String getKeyEncryptionAlgorithmFromOID(String oid){
+		if( oid.equals(PKCSObjectIdentifiers.id_RSAES_OAEP.toString()))
+			return "RSAOAEP";
+		if( oid.equals(PKCSObjectIdentifiers.rsaEncryption.toString()))
+			return "RSAES-PKCS1-v1_5";
+		return "";
 	}
 }
