@@ -47,6 +47,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.dtrust.dao.interoptest.dao.TestEntityNotFoundException;
@@ -65,7 +66,6 @@ import org.nhindirect.policy.PolicyFilterFactory;
 import org.nhindirect.policy.PolicyLexicon;
 import org.nhindirect.policy.PolicyLexiconParser;
 import org.nhindirect.policy.PolicyLexiconParserFactory;
-import org.nhindirect.stagent.CryptoExtensions;
 import org.nhindirect.stagent.cert.CertificateResolver;
 import org.nhindirect.stagent.cert.Thumbprint;
 import org.nhindirect.stagent.cert.impl.DNSCertificateStore;
@@ -175,8 +175,9 @@ public class InteropTestResource
 			crlSigningCert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(certStream);
 			final PKCS8EncodedKeySpec keysp = new PKCS8EncodedKeySpec ( IOUtils.toByteArray(keyStream) );
 			crlSigningKey = KeyFactory.getInstance("RSA").generatePrivate(keysp);
-			
-			certToRevoke = PrivateCertResolver.loadCertFromResource("certs/revoked.p12");
+
+			certToRevoke = null;
+			//certToRevoke = PrivateCertResolver.loadCertFromResource("certs/revoked.p12");
 
 		}
 		catch (Exception e)
@@ -934,7 +935,8 @@ public class InteropTestResource
 				crlGen.addExtension(X509Extensions.CRLNumber,
 		                false, new CRLNumber(BigInteger.valueOf(crlNum++)));
 				
-				X509CRL crl = crlGen.generate(signingKey, CryptoExtensions.getJCEProviderName());
+				//X509CRL crl = crlGen.generate(signingKey, CryptoExtensions.getJCEProviderName());
+				X509CRL crl = crlGen.generate(signingKey, BouncyCastleProvider.PROVIDER_NAME);
 				FileUtils.writeByteArrayToFile(crlFile, crl.getEncoded());		
 			}
 			catch (Exception e)

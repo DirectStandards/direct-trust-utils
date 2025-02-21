@@ -22,8 +22,6 @@ import org.nhindirect.stagent.NHINDAddressCollection;
 import org.nhindirect.stagent.cert.CertificateStore;
 import org.nhindirect.stagent.cryptography.EncryptionAlgorithm;
 import org.nhindirect.stagent.cryptography.SMIMEStandard;
-import org.nhindirect.stagent.cryptography.activekeyops.DefaultDirectRecipientInformationFactory;
-import org.nhindirect.stagent.cryptography.activekeyops.DirectRecipientInformation;
 import org.nhindirect.stagent.mail.Message;
 import org.nhindirect.stagent.mail.MimeEntity;
 import org.nhindirect.stagent.mail.MimeException;
@@ -89,7 +87,8 @@ public class EncrValidator
 
 					// check if this certificate is in the message
 					final RecipientInformationStore recipients = env.getRecipientInfos();
-					final DirectRecipientInformation recipient = (new DefaultDirectRecipientInformationFactory("BC")).createInstance(recipients.get(recId), env);
+					RecipientInformation recipient = recipients.get(recId);
+					//final DirectRecipientInformation recipient = (new DefaultDirectRecipientInformationFactory("BC")).createInstance(recipients.get(recId), env);
 					if (recipient == null)
 						continue; // certificate is not in the message... move on
 

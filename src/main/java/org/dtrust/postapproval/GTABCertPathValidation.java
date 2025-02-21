@@ -32,11 +32,11 @@ import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PrincipalUtil;
 import org.bouncycastle.jce.X509Principal;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.dtrust.resources.utils.MessageBuilderUtils;
 import org.dtrust.util.SMTPMessageSender;
 import org.nhindirect.policy.x509.AuthorityInfoAccessExtentionField;
 import org.nhindirect.policy.x509.AuthorityInfoAccessMethodIdentifier;
-import org.nhindirect.stagent.CryptoExtensions;
 import org.nhindirect.stagent.cert.RevocationManager;
 import org.nhindirect.stagent.cert.Thumbprint;
 import org.nhindirect.stagent.cert.impl.CRLRevocationManager;
@@ -71,7 +71,7 @@ public class GTABCertPathValidation
 	
 	static
 	{
-		CryptoExtensions.registerJCEProviders();
+		//CryptoExtensions.registerJCEProviders();
 		
 		aiaCache = new HashMap<String, Collection<X509Certificate>>();
 		
@@ -390,11 +390,12 @@ public class GTABCertPathValidation
 			
 			final CertificateFactory factory = CertificateFactory.getInstance("X509");
 			final CertPath certPath = factory.generateCertPath(certCol);
-	    	final CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX", CryptoExtensions.getJCEProviderNameForTypeAndAlgorithm("CertPathValidator", "PKIX"));    		
-			
-	    	
-	    	
-	    	pathValidator.validate(certPath, params);
+	    	//final CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX", CryptoExtensions.getJCEProviderNameForTypeAndAlgorithm("CertPathValidator", "PKIX"));
+			final CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX", BouncyCastleProvider.PROVIDER_NAME);
+
+
+
+			pathValidator.validate(certPath, params);
 			return true;
 		}
 		catch (Exception e)
