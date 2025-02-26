@@ -28,6 +28,7 @@ public class ATABValidationReportAttr extends GTABValidationReportAttr
 		{
 			builder.append("\tEnryption Validation Status: " + encrReport.encrValid + "\r\n");
 			builder.append("\tEncryption Alorithm OID: " + encrReport.encouteredOID + "\r\n");
+			builder.append("\tKey Encryption Alorithm OID: " + encrReport.keyEncryptionOID + "(" +  getKeyEncryptionAlgorithmFromOID(encrReport.keyEncryptionOID) + ")\r\n");
 			builder.append("\tComments: " + encrReport.comment + "\r\n\r\n");
 		}
 		else
@@ -68,4 +69,6 @@ public class ATABValidationReportAttr extends GTABValidationReportAttr
 		
 		return builder.toString();
 	}
+
+
 }

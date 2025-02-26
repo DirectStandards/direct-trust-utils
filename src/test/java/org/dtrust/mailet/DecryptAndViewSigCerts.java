@@ -16,11 +16,11 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.mail.smime.CMSProcessableBodyPart;
 import org.junit.Test;
 import org.nhindirect.config.model.utils.CertUtils;
 import org.nhindirect.config.model.utils.CertUtils.CertContainer;
-import org.nhindirect.stagent.CryptoExtensions;
 import org.nhindirect.stagent.cert.X509CertificateEx;
 import org.nhindirect.stagent.cryptography.SMIMECryptographerImpl;
 import org.nhindirect.stagent.mail.Message;
@@ -55,7 +55,7 @@ public class DecryptAndViewSigCerts
 		
 		final CMSSignedData signed = new CMSSignedData(new CMSProcessableBodyPart(verifyMM.getBodyPart(0)), verifyMM.getBodyPart(1).getInputStream());
 		
-		final CertStore certs = signed.getCertificatesAndCRLs("Collection", CryptoExtensions.getJCEProviderName());
+		final CertStore certs = signed.getCertificatesAndCRLs("Collection", BouncyCastleProvider.PROVIDER_NAME);
 		
 		for (SignerInformation sigInfo : (Collection<SignerInformation>)signed.getSignerInfos().getSigners())	 
 		{
