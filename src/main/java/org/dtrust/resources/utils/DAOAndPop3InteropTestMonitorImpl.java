@@ -15,6 +15,7 @@ import org.dtrust.dao.interoptest.dao.TestSuiteDAO;
 import org.dtrust.dao.interoptest.entity.Test;
 import org.dtrust.dao.interoptest.entity.TestStatus;
 import org.dtrust.dao.interoptest.entity.TestSuite;
+import org.dtrust.dao.interoptest.entity.TestType;
 import org.dtrust.util.MessageRetriever;
 import org.dtrust.util.MessageSender;
 import org.nhindirect.common.mail.MDNStandard;
@@ -145,8 +146,7 @@ public class DAOAndPop3InteropTestMonitorImpl implements Runnable
 		// check if any of the tests failel
 		TestStatus suiteStatus = TestStatus.COMPLETED_SUCCESS;
 		for (Test test : suite.getTests())
-			if (test.getTestStatus() != TestStatus.COMPLETED_SUCCESS)
-			{
+			if (test.getTestStatus() != TestStatus.COMPLETED_SUCCESS && !test.isIgnoreTestResults()) {
 				suiteStatus = TestStatus.COMPLETED_FAIL;
 				break;
 			}

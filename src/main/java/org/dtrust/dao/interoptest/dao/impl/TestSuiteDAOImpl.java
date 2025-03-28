@@ -219,6 +219,43 @@ public class TestSuiteDAOImpl implements TestSuiteDAO
 	}
 
 	@Override
+	@Transactional(readOnly = false)
+	public Test initiateTest(String name, TestType testType, long testSuiteId, boolean ignoreTestResults) throws TestDAOException
+	{
+		validateState();
+
+		// make sure the test exists
+		final TestSuite suite = this.getTestSuite(testSuiteId);
+
+		final Test addTest = new Test();
+
+		final Calendar cal = Calendar.getInstance(Locale.getDefault());
+
+		addTest.setStartDtTm(cal);
+		addTest.setUpdateDtTm(cal);
+		addTest.setTestStatus(TestStatus.INITIATED);
+		addTest.setUpdateCnt(0);
+		addTest.setTestName(name);
+		addTest.setType(testType);
+		addTest.setIgnoreTestResults(ignoreTestResults);
+
+		try
+		{
+			entityManager.persist(addTest);
+
+			suite.getTests().add(addTest);
+
+			entityManager.merge(suite);
+		}
+		catch (Exception e)
+		{
+			throw new TestDAOException("Failed to add test.", e);
+		}
+
+		return addTest;
+	}
+
+	@Override
     @Transactional(readOnly = false)
 	public Test updateTest(Test test) throws TestDAOException
 	{

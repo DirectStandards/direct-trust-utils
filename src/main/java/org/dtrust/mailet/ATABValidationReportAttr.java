@@ -1,5 +1,8 @@
 package org.dtrust.mailet;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
+
 public class ATABValidationReportAttr extends GTABValidationReportAttr
 {
 
@@ -26,9 +29,18 @@ public class ATABValidationReportAttr extends GTABValidationReportAttr
 		builder.append("Encryption Validation:\r\n");
 		if (encrReport != null)
 		{
+			DefaultAlgorithmNameFinder defaultAlgorithmNameFinder = new DefaultAlgorithmNameFinder();
 			builder.append("\tEnryption Validation Status: " + encrReport.encrValid + "\r\n");
-			builder.append("\tEncryption Alorithm OID: " + encrReport.encouteredOID + "\r\n");
-			builder.append("\tKey Encryption Alorithm OID: " + encrReport.keyEncryptionOID + "(" +  getKeyEncryptionAlgorithmFromOID(encrReport.keyEncryptionOID) + ")\r\n");
+			//builder.append("\tEncryption Algorithm OID: " + encrReport.encouteredOID +  "(" +  getEncryptionAlgorithmFromOID(encrReport.encouteredOID) + ")\r\n");
+			builder.append("\tEncryption Algorithm OID: " + encrReport.encouteredOID +  "(" +  defaultAlgorithmNameFinder.getAlgorithmName(new ASN1ObjectIdentifier(encrReport.encouteredOID.toString())) + ")\r\n");
+			builder.append("\tKey Encryption Alorithm OID: " + encrReport.keyEncryptionOID + "(" +  defaultAlgorithmNameFinder.getAlgorithmName(new ASN1ObjectIdentifier(encrReport.keyEncryptionOID)) + ")\r\n");
+			if( encrReport.keyEncryptionDigestOID != null) {
+				//builder.append("\tKey Encryption Digest: " + encrReport.keyEncryptionDigestOID + "(" + getKeyEncryptionDigest(encrReport.keyEncryptionDigestOID) + ")\r\n");
+				builder.append("\tKey Encryption Digest: " + encrReport.keyEncryptionDigestOID + "(" + defaultAlgorithmNameFinder.getAlgorithmName(new ASN1ObjectIdentifier(encrReport.keyEncryptionDigestOID)) + ")\r\n");
+			}
+			if( encrReport.keyEncryptionMaskGenerationAlgorithmOID != null) {
+				builder.append("\tKey Encryption Mask Generation Algorithm: " + encrReport.keyEncryptionMaskGenerationAlgorithmOID + "(" + getMaskFunctionGeneratorFromOID(encrReport.keyEncryptionMaskGenerationAlgorithmOID) + ")\r\n");
+			}
 			builder.append("\tComments: " + encrReport.comment + "\r\n\r\n");
 		}
 		else
@@ -40,7 +52,7 @@ public class ATABValidationReportAttr extends GTABValidationReportAttr
 		if (digSigReport != null)
 		{
 			builder.append("\tDigital Signature Validation Status: " + digSigReport.digSigValid + "\r\n");
-			builder.append("\tDigest Alorithm OID: " + digSigReport.encouteredOID + "\r\n");
+			builder.append("\tDigest Alorithm OID: " + digSigReport.encouteredOID + " (" + getKeyEncryptionDigest(digSigReport.encouteredOID) + ")\r\n");
 			builder.append("\tComments: " + digSigReport.comment + "\r\n\r\n");
 		}
 		else

@@ -72,6 +72,8 @@ import org.nhindirect.stagent.cert.impl.DNSCertificateStore;
 import org.nhindirect.stagent.cert.impl.LDAPCertificateStore;
 import org.nhindirect.stagent.cert.impl.LdapPublicCertUtilImpl;
 import org.nhindirect.stagent.cryptography.Cryptographer;
+import org.nhindirect.stagent.cryptography.DigestAlgorithm;
+import org.nhindirect.stagent.cryptography.EncryptionAlgorithm;
 import org.nhindirect.stagent.cryptography.SMIMECryptographerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -158,8 +160,11 @@ public class InteropTestResource
 		final LdapPublicCertUtilImpl utilImpl = new LdapPublicCertUtilImpl();
 		publicCertResolvers.add(new LDAPCertificateStore(utilImpl, null, null));
 		
-		crypto = new SMIMECryptographerImpl();
-		
+		//crypto = new SMIMECryptographerImpl();
+
+		crypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_PKCS1_V15, null);
+
+
 		InputStream ioStream = null;
 		InputStream certStream = null;
 		InputStream keyStream = null;
@@ -176,8 +181,8 @@ public class InteropTestResource
 			final PKCS8EncodedKeySpec keysp = new PKCS8EncodedKeySpec ( IOUtils.toByteArray(keyStream) );
 			crlSigningKey = KeyFactory.getInstance("RSA").generatePrivate(keysp);
 
-			certToRevoke = null;
-			//certToRevoke = PrivateCertResolver.loadCertFromResource("certs/revoked.p12");
+			//certToRevoke = null;
+			certToRevoke = PrivateCertResolver.loadCertFromResource("certs/revoked.p12");
 
 		}
 		catch (Exception e)
@@ -288,6 +293,7 @@ public class InteropTestResource
 		final Collection<MimeMessage> retVal = new ArrayList<MimeMessage>();
 		
 		// hard code for now
+
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, text only", "This is a test message.", null , null, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, c-cda only", "", ccdaContent , null, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, image only", "", null , imageContent, null, false));
@@ -295,9 +301,10 @@ public class InteropTestResource
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content", "This is a mixed message", ccdaContent , null, pdfContent, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content", "This is another mixed message", null , this.imageContent, null, false));
 
-		
 		return retVal;
 	}
+
+
 	
 	protected Collection<Collection<String>> getCertificateSendScenarios()
 	{
@@ -523,13 +530,13 @@ public class InteropTestResource
 					certPolTest.setComments("Certificate check aborted: " + e.getMessage());
 					dao.updateTest(certPolTest);
 				}
-				
+
+
 				try
 				{
 	
 					// generate the happy path messages
 					final Collection<MimeMessage> happyPathMessages = getHappyPathMessages(to);
-	
 					for (MimeMessage msgToProcess : happyPathMessages)
 					{
 						final Test happyPathTest = dao.initiateTest(msgToProcess.getSubject(), TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid());
@@ -563,8 +570,9 @@ public class InteropTestResource
 							happyPathTest.setComments("Messaging test aborted: " + e.getMessage());
 							dao.updateTest(happyPathTest);
 						}
+
 					}
-					
+
 					final Test multiCertTest = dao.initiateTest("Happy path, multi certs (non trusted cert)", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid());
 					try
 					{
@@ -644,7 +652,7 @@ public class InteropTestResource
 						multiCertExpiredTest.setComments("Creating direct message.");
 						dao.updateTest(multiCertExpiredTest);
 						
-						final MimeMessage staEncryptedMsg = MessageBuilderUtils.createDirectMessage(publicCertResolvers, privateCertResolver, crypto, 
+						final MimeMessage staEncryptedMsg = MessageBuilderUtils.createDirectMessage(publicCertResolvers, privateCertResolver, crypto,
 								goodBadCertMsg, Arrays.asList(PrivateCertResolver.EXPIRED, PrivateCertResolver.GOOD));
 						
 						
@@ -661,7 +669,7 @@ public class InteropTestResource
 						multiCertExpiredTest.setComments("Messaging test aborted: " + e.getMessage());
 						dao.updateTest(multiCertExpiredTest);
 					}					
-					
+
 					// delivery notification
 					final Test deliveryNoteTest = dao.initiateTest("Happy path, delivery notification IG", TestType.SEND_RELIABLE_GOOD_MESSAGE, testSuite.getTestSuiteid());
 					try
@@ -698,13 +706,154 @@ public class InteropTestResource
 						deliveryNoteTest.setComments("Messaging test aborted: " + e.getMessage());
 						dao.updateTest(deliveryNoteTest);
 					}	
-			
+
 				}
 				catch (Exception e)
 				{
 					
 				}
-				
+
+
+				/*
+				 generate the happy path RSA-OAEP messages
+				 */
+
+				// RSA-OAEP with SHA-1 Digest
+				final Test rsaOAEPSHA1Test = dao.initiateTest("Happy path,RSA-OAEP Key encryption SHA-1 digest", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid());
+				try
+				{
+					System.out.println("Test name: " + rsaOAEPSHA1Test.getTestName());
+
+					// send a message with a good and bad cert
+					final MimeMessage rsaOAEPMsg = MessageBuilderUtils.createMimeMessage(
+							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-1 digest", "This is a test message using RSA OAEP Key encryption, SHA-1 digest", null , null, null, false);
+
+					System.out.println("Initial message id: " + rsaOAEPMsg.getMessageID());
+
+					rsaOAEPSHA1Test.setTestStatus(TestStatus.RUNNING);
+					rsaOAEPSHA1Test.setComments("Creating direct message.");
+					dao.updateTest(rsaOAEPSHA1Test);
+
+					SMIMECryptographerImpl rsaOAEPcrypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_OAEP, DigestAlgorithm.SHA1);
+					final MimeMessage staEncryptedMsg = MessageBuilderUtils.createDirectMessage(publicCertResolvers, privateCertResolver, rsaOAEPcrypto,
+							rsaOAEPMsg, Arrays.asList(PrivateCertResolver.GOOD));
+
+					System.out.println("Final encrypted message id: " + staEncryptedMsg.getMessageID() + "\r\n\r\n");
+					rsaOAEPSHA1Test.setCorrelationId(staEncryptedMsg.getMessageID());
+					rsaOAEPSHA1Test.setComments("Handing off to SMTP server.");
+					dao.updateTest(rsaOAEPSHA1Test);
+					msgSender.sendMessage(staEncryptedMsg);
+				}
+				catch (Exception e)
+				{
+					rsaOAEPSHA1Test.setTestStatus(TestStatus.ABORTED);
+					rsaOAEPSHA1Test.setComments("Messaging test aborted: " + e.getMessage());
+					dao.updateTest(rsaOAEPSHA1Test);
+				}
+
+				// RSA-OAEP with SHA-256 Digest
+				boolean ignoreTestResults = true;
+				final Test rsaOAEPSHA256Test = dao.initiateTest("Happy path,RSA-OAEP Key encryption SHA-256 digest", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid(), ignoreTestResults);
+				try
+				{
+					System.out.println("Test name: " + rsaOAEPSHA256Test.getTestName());
+
+					// send a message with a good and bad cert
+					final MimeMessage rsaOAEPMsg = MessageBuilderUtils.createMimeMessage(
+							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-256 digest", "This is a test message using RSA OAEP Key encryption, SHA-256 digest", null , null, null, false);
+
+					System.out.println("Initial message id: " + rsaOAEPMsg.getMessageID());
+
+					rsaOAEPSHA256Test.setTestStatus(TestStatus.RUNNING);
+					rsaOAEPSHA256Test.setComments("Creating direct message.");
+					dao.updateTest(rsaOAEPSHA256Test);
+
+					SMIMECryptographerImpl rsaOAEPcrypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_OAEP, DigestAlgorithm.SHA256);
+					final MimeMessage staEncryptedMsg = MessageBuilderUtils.createDirectMessage(publicCertResolvers, privateCertResolver, rsaOAEPcrypto,
+							rsaOAEPMsg, Arrays.asList(PrivateCertResolver.GOOD));
+
+					System.out.println("Final encrypted message id: " + staEncryptedMsg.getMessageID() + "\r\n\r\n");
+					rsaOAEPSHA256Test.setCorrelationId(staEncryptedMsg.getMessageID());
+					rsaOAEPSHA256Test.setComments("Handing off to SMTP server.");
+					dao.updateTest(rsaOAEPSHA256Test);
+					msgSender.sendMessage(staEncryptedMsg);
+				}
+				catch (Exception e)
+				{
+					rsaOAEPSHA256Test.setTestStatus(TestStatus.ABORTED);
+					rsaOAEPSHA256Test.setComments("Messaging test aborted: " + e.getMessage());
+					dao.updateTest(rsaOAEPSHA256Test);
+				}
+
+				// RSA-OAEP with SHA-384 Digest
+				ignoreTestResults = true;
+				final Test rsaOAEPSHA384Test = dao.initiateTest("Happy path,RSA-OAEP Key encryption SHA-384 digest", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid(), ignoreTestResults);
+				try
+				{
+					System.out.println("Test name: " + rsaOAEPSHA384Test.getTestName());
+
+					// send a message with a good and bad cert
+					final MimeMessage rsaOAEPMsg = MessageBuilderUtils.createMimeMessage(
+							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-384 digest", "This is a test message using RSA OAEP Key encryption, SHA-384 digest", null , null, null, false);
+
+					System.out.println("Initial message id: " + rsaOAEPMsg.getMessageID());
+
+					rsaOAEPSHA384Test.setTestStatus(TestStatus.RUNNING);
+					rsaOAEPSHA384Test.setComments("Creating direct message.");
+					dao.updateTest(rsaOAEPSHA384Test);
+
+					SMIMECryptographerImpl rsaOAEPcrypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_OAEP, DigestAlgorithm.SHA384);
+					final MimeMessage staEncryptedMsg = MessageBuilderUtils.createDirectMessage(publicCertResolvers, privateCertResolver, rsaOAEPcrypto,
+							rsaOAEPMsg, Arrays.asList(PrivateCertResolver.GOOD));
+
+					System.out.println("Final encrypted message id: " + staEncryptedMsg.getMessageID() + "\r\n\r\n");
+					rsaOAEPSHA384Test.setCorrelationId(staEncryptedMsg.getMessageID());
+					rsaOAEPSHA384Test.setComments("Handing off to SMTP server.");
+					dao.updateTest(rsaOAEPSHA384Test);
+					msgSender.sendMessage(staEncryptedMsg);
+				}
+				catch (Exception e)
+				{
+					rsaOAEPSHA384Test.setTestStatus(TestStatus.ABORTED);
+					rsaOAEPSHA384Test.setComments("Messaging test aborted: " + e.getMessage());
+					dao.updateTest(rsaOAEPSHA384Test);
+				}
+
+				// RSA-OAEP with SHA-512 Digest
+				ignoreTestResults = true;
+				final Test rsaOAEPSHA512Test = dao.initiateTest("Happy path,RSA-OAEP Key encryption SHA-512 digest", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid(), ignoreTestResults);
+				try
+				{
+					System.out.println("Test name: " + rsaOAEPSHA512Test.getTestName());
+
+					// send a message with a good and bad cert
+					final MimeMessage rsaOAEPMsg = MessageBuilderUtils.createMimeMessage(
+							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-384 digest", "This is a test message using RSA OAEP Key encryption, SHA-384 digest", null , null, null, false);
+
+					System.out.println("Initial message id: " + rsaOAEPMsg.getMessageID());
+
+					rsaOAEPSHA512Test.setTestStatus(TestStatus.RUNNING);
+					rsaOAEPSHA512Test.setComments("Creating direct message.");
+					dao.updateTest(rsaOAEPSHA512Test);
+
+					SMIMECryptographerImpl rsaOAEPcrypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_OAEP, DigestAlgorithm.SHA512);
+					final MimeMessage staEncryptedMsg = MessageBuilderUtils.createDirectMessage(publicCertResolvers, privateCertResolver, rsaOAEPcrypto,
+							rsaOAEPMsg, Arrays.asList(PrivateCertResolver.GOOD));
+
+					System.out.println("Final encrypted message id: " + staEncryptedMsg.getMessageID() + "\r\n\r\n");
+					rsaOAEPSHA512Test.setCorrelationId(staEncryptedMsg.getMessageID());
+					rsaOAEPSHA512Test.setComments("Handing off to SMTP server.");
+					dao.updateTest(rsaOAEPSHA512Test);
+					msgSender.sendMessage(staEncryptedMsg);
+				}
+				catch (Exception e)
+				{
+					rsaOAEPSHA512Test.setTestStatus(TestStatus.ABORTED);
+					rsaOAEPSHA512Test.setComments("Messaging test aborted: " + e.getMessage());
+					dao.updateTest(rsaOAEPSHA512Test);
+				}
+
+
 				// now do the negative tests
 
 	
@@ -851,8 +1000,10 @@ public class InteropTestResource
 					dao.updateTest(negativeTest);				
 				}
 
-							
+
 			}
+
+
 			catch (Exception e)
 			{
 				try
@@ -878,7 +1029,7 @@ public class InteropTestResource
 				}
 				catch (Exception e2){/*no op */}
 			}
-			
+
 			try
 			{
 				// the the final version of the test suite

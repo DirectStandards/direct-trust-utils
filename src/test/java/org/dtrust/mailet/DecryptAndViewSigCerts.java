@@ -14,10 +14,13 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.mail.smime.CMSProcessableBodyPart;
+import org.bouncycastle.util.Store;
 import org.junit.Test;
 import org.nhindirect.config.model.utils.CertUtils;
 import org.nhindirect.config.model.utils.CertUtils.CertContainer;
@@ -55,17 +58,18 @@ public class DecryptAndViewSigCerts
 		
 		final CMSSignedData signed = new CMSSignedData(new CMSProcessableBodyPart(verifyMM.getBodyPart(0)), verifyMM.getBodyPart(1).getInputStream());
 		
-		final CertStore certs = signed.getCertificatesAndCRLs("Collection", BouncyCastleProvider.PROVIDER_NAME);
-		
+		//final CertStore certs = signed.getCertificatesAndCRLs("Collection", BouncyCastleProvider.PROVIDER_NAME);
+		Store<X509CertificateHolder> certificates = signed.getCertificates();
 		for (SignerInformation sigInfo : (Collection<SignerInformation>)signed.getSignerInfos().getSigners())	 
 		{
-			final Collection<? extends Certificate> certCollection = certs.getCertificates(sigInfo.getSID());
+			//final Collection<? extends Certificate> certCollection = certs.getCertificates(sigInfo.getSID());
+			final Collection<X509CertificateHolder> certCollection = certificates.getMatches(sigInfo.getSID());
 			if (certCollection != null)
 			{
-				for (Certificate cert : certCollection)
+				for (X509CertificateHolder certificateHolder : certCollection)
 				{
-					final X509Certificate validateCert = (X509Certificate)cert;
-					FileUtils.writeByteArrayToFile(new File("sigCert3.der"), validateCert.getEncoded());
+					X509Certificate x509Certificate = new JcaX509CertificateConverter().getCertificate(certificateHolder);
+					FileUtils.writeByteArrayToFile(new File("sigCert3.der"), x509Certificate.getEncoded());
 				}
 			}
 		}

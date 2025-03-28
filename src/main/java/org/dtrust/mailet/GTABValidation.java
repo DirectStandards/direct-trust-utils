@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dtrust.client.TestRegService;
 import org.dtrust.client.impl.TestRegServiceImpl;
 import org.dtrust.dao.interoptest.entity.TestRegistration;
+import org.nhind.config.rest.CertificateService;
 import org.nhindirect.common.rest.BootstrapBasicAuthServiceSecurityManager;
 import org.nhindirect.common.rest.HttpClientFactory;
 import org.nhindirect.common.rest.ServiceSecurityManager;
@@ -33,7 +34,7 @@ public class GTABValidation extends AbstractValidation
 	private static final Log LOGGER = LogFactory.getFactory().getInstance(GTABValidation.class);	
 
 	protected TestRegService service;
-	
+	protected CertificateService certService;
 	@Override
 	public void init() throws MessagingException
 	{
@@ -73,7 +74,8 @@ public class GTABValidation extends AbstractValidation
 		GTABValidationReportAttr reportAttr = new GTABValidationReportAttr();
 
 		// validate the encryption requirements
-		reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, proxy, true);
+		//reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, proxy, true);
+		reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, certService, true);
 		if (!reportAttr.encrReport.encrValid)
 			return reportAttr; 			// bail 
 

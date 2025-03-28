@@ -3,6 +3,7 @@ package org.dtrust.mailet;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -14,9 +15,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mailet.Mail;
-import org.nhind.config.ConfigurationServiceProxy;
+//import org.nhind.config.ConfigurationServiceProxy;
+import org.nhind.config.rest.CertificateService;
+import org.nhind.config.rest.feign.CertificateClient;
+import org.nhindirect.common.mail.SMTPMailMessage;
+import org.nhindirect.common.rest.exceptions.ServiceException;
+import org.nhindirect.config.model.Certificate;
 import org.nhindirect.gateway.smtp.dsn.DSNCreator;
 import org.nhindirect.gateway.smtp.james.mailet.AbstractNotificationAwareMailet;
+import org.nhindirect.gateway.util.MessageUtils;
 import org.nhindirect.stagent.NHINDAddress;
 import org.nhindirect.stagent.NHINDAddressCollection;
 import org.nhindirect.stagent.cert.X509CertificateEx;
@@ -25,9 +32,15 @@ import org.nhindirect.stagent.mail.Message;
 import org.nhindirect.stagent.mail.MimeEntity;
 
 import com.google.inject.Provider;
+import org.springframework.context.ApplicationContext;
+
+import static org.nhindirect.gateway.util.MessageUtils.getSender;
+
 
 public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 {
+
+
 	private static final Log LOGGER = LogFactory.getFactory().getInstance(GTABValidation.class);	
 
 	protected static final String TEST_REG_BASE_URL = "TestRegServiceURL";
@@ -44,8 +57,10 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 	
 	protected InternetAddress reportSender;
 	
-	protected ConfigurationServiceProxy proxy;
-	
+	//protected ConfigurationServiceProxy proxy;
+	protected CertificateService certificateService;
+	protected ApplicationContext ctx;
+
 	@Override
 	public void init() throws MessagingException
 	{
@@ -64,12 +79,13 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		{
 			LOGGER.error("Configuration URL cannot be empty or null.");
 			throw new MessagingException("Configuration Configuration URL cannot be empty or null.");
-		}	
-		
-		
+		}
+
+
 		// create an instance of the Config Service for getting private keys
-		proxy = new ConfigurationServiceProxy(configURLParam);
-		
+		//proxy = new ConfigurationServiceProxy(configURLParam);
+
+
 		// get the report sender 
 		final String senderParamValue = getMailetConfig().getInitParameter(REPORT_SENDER_PARAMS);
 		if (StringUtils.isEmpty(senderParamValue))
@@ -99,7 +115,16 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		
 
 	}
-	
+	/**
+	 * Creates a spring application context.
+	 * @return Spring application context.
+	 */
+	protected ApplicationContext createSpringApplicationContext()
+	{
+		return null;
+	}
+
+
 	@Override
 	public void service(Mail mail) throws MessagingException 
 	{	
@@ -109,15 +134,18 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		final Message msg = new Message(mail.getMessage());
 		
 		// get the recipient list
-		final NHINDAddressCollection recips = this.getMailRecipients(mail);
+		//final NHINDAddressCollection recips = this.getMailRecipients(mail);
+		final SMTPMailMessage smtpMailMessage = mailToSMTPMailMessage(mail);
+		final NHINDAddressCollection recips = MessageUtils.getMailRecipients(smtpMailMessage);
 		
 		final ValidationReportAttr report = validateMessageAttributes(msg, recips);
 		
 		// create a report message and send it to the report recips
 		final MimeMessage reportMsg = new MimeMessage((Session)null);
 		
-		final InternetAddress sendAddr = getSender(mail);
-		
+		final InternetAddress sendAddr = getSender(smtpMailMessage);
+		//final InternetAddress sendAddr = getSender(mail);
+
 		report.fromAddr = sendAddr.toString();
 		for (NHINDAddress toAddr : recips)
 		{
@@ -145,8 +173,8 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		getMailetContext().sendMail(reportMsg);
 		
 		LOGGER.info("Sending validation report to " + reportMsg.getHeader("To", ",") + " from " + reportSender.getAddress());
-		
-		//mail.setState(Mail.GHOST);
+		// emm I think if we uncomment below it shouldn't continue on the mailet container chain?
+		mail.setState(Mail.GHOST);
 	}
 	
 	protected MimeEntity decryptMessage(Message msg, NHINDAddressCollection recips) throws Exception
@@ -154,7 +182,8 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		// decrypt the message
 		
 		// first get the certificates needed to decrypt the message
-		final Collection<X509Certificate> lookupCerts = EncrValidator.getRecipCerts(recips, proxy);
+		final Collection<X509Certificate> lookupCerts = EncrValidator.getRecipCerts(recips, certificateService);
+		//final Collection<X509Certificate> lookupCerts = EncrValidator.getRecipCerts(recips, proxy);
 		final Collection<X509CertificateEx> decryptCerts = new ArrayList<X509CertificateEx>();
 		for (X509Certificate lookupCert : lookupCerts)
 		{
@@ -167,7 +196,7 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 		return crypto.decrypt(msg.extractMimeEntity(), decryptCerts);
 	}
 	
-	@Override
+	//@Override
 	protected Provider<DSNCreator> getDSNProvider() 
 	{
 		return null;

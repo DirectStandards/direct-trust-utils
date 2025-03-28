@@ -11,10 +11,13 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.mail.smime.CMSProcessableBodyPart;
+import org.bouncycastle.util.Store;
 import org.nhindirect.stagent.cryptography.DigestAlgorithm;
 
 public class GTABDigSigValidator 
@@ -42,8 +45,8 @@ public class GTABDigSigValidator
 			final CMSSignedData signed = new CMSSignedData(new CMSProcessableBodyPart(msg.getBodyPart(0)), msg.getBodyPart(1).getInputStream());
 			
 			//final CertStore certs = signed.getCertificatesAndCRLs("Collection", CryptoExtensions.getJCEProviderName());
-			final CertStore certs = signed.getCertificatesAndCRLs("Collection", BouncyCastleProvider.PROVIDER_NAME);
-
+			//final CertStore certs = signed.getCertificatesAndCRLs("Collection", BouncyCastleProvider.PROVIDER_NAME);
+			Store<X509CertificateHolder> certificates = signed.getCertificates();
 			// go through all the signers and make sure all requirements are satisfied
     		for (SignerInformation sigInfo : (Collection<SignerInformation>)signed.getSignerInfos().getSigners())	 
     		{
@@ -56,13 +59,14 @@ public class GTABDigSigValidator
 					report.digSigReport = digSigReport;
 					return report;
     			}
-    			
-    			final Collection<? extends Certificate> certCollection = certs.getCertificates(sigInfo.getSID());
+				final Collection<X509CertificateHolder> certCollection = certificates.getMatches(sigInfo.getSID());
+    			//final Collection<? extends Certificate> certCollection = certs.getCertificates(sigInfo.getSID());
     			if (certCollection != null)
     			{
-    				for (Certificate cert : certCollection)
+    				for (X509CertificateHolder certificateHolder : certCollection)
     				{
-    					final X509Certificate validateCert = (X509Certificate)cert;
+
+    					final X509Certificate validateCert =  new JcaX509CertificateConverter().getCertificate(certificateHolder);
     					
     			        // validate that the sender only uses certificates that assert
     			        // the digital signature key usage

@@ -15,7 +15,6 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.nhind.config.Certificate;
 import org.nhindirect.stagent.NHINDAddress;
 import org.nhindirect.stagent.NHINDAddressCollection;
 import org.nhindirect.stagent.cert.CertificateStore;
@@ -35,8 +34,7 @@ public class GTABEncrValidator_validateEncryptionTest
 		
 		final Collection<X509Certificate> retCerts = Arrays.asList(keyEncCert);
 		
-		final Certificate retCert = new Certificate();
-		retCert.setData(keyEncCert.getEncoded());
+
 		
 		final CertificateStore store = mock(CertificateStore.class);
 		final InternetAddress addr = new InternetAddress("operations.cernerdirect.com");
@@ -49,7 +47,16 @@ public class GTABEncrValidator_validateEncryptionTest
 		try
 		{
 			report = EncrValidator.validateEncryption(msg, report, recips, null, true);
-		
+			GTABValidationReportAttr.DigSigReport digSigReport = new GTABValidationReportAttr.DigSigReport();
+			digSigReport.encouteredOID = "2.16.840.1.101.3.4.2.1";
+			report.digSigReport = digSigReport;
+			report.encrReport.keyEncryptionOID = "1.2.840.113549.1.1.7";
+			report.encrReport.keyEncryptionMaskGenerationAlgorithmOID = "1.2.840.113549.1.1.8";
+			report.encrReport.keyEncryptionDigestOID = "1.3.14.3.2.26";
+			String s = report.toString();
+			String encAlg = GTABValidationReportAttr.getEncryptionAlgorithmFromOID("2.16.840.1.101.3.4.1.2");
+
+
 			assertTrue(report.encrReport.encrValid);
 		}
 		finally

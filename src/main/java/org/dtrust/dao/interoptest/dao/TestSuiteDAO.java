@@ -21,6 +21,8 @@ public interface TestSuiteDAO
 	public Test getTest(long testId) throws TestDAOException;
 	
 	public Test initiateTest(String name, TestType testType, long testSuiteId) throws TestDAOException;
-	
+
+	public Test initiateTest(String name, TestType testType, long testSuiteId, boolean ignoreTestResults) throws TestDAOException;
+
 	public Test updateTest(Test test) throws TestDAOException;	
 }
