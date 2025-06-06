@@ -44,10 +44,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.provider.X509CRLObject;
+import org.bouncycastle.jce.provider.X509CRLParser;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.dtrust.dao.interoptest.dao.TestEntityNotFoundException;
@@ -117,7 +122,8 @@ public class InteropTestResource
 	@Autowired
 	@Qualifier("crlFile")
 	protected String crlFile;
-	
+
+
 	@Autowired
 	@Qualifier("localDomain")
 	protected String localDomain;
@@ -237,8 +243,8 @@ public class InteropTestResource
 	public void startCRLScheduler()
 	{
 		final CRLCreationTask crlTask = new CRLCreationTask(crlSigningCert, crlSigningKey, 
-				new File(crlFile), Arrays.asList(certToRevoke));
-		clrGenScheduler.scheduleAtFixedRate(crlTask, 0, 1, TimeUnit.DAYS);		
+				new File(crlFile),  Arrays.asList(certToRevoke));
+		clrGenScheduler.scheduleAtFixedRate(crlTask, 0, 7, TimeUnit.DAYS);
 	}
 	
 	public void setConfigURL(String configURL)
@@ -298,8 +304,7 @@ public class InteropTestResource
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, c-cda only", "", ccdaContent , null, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, image only", "", null , imageContent, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, pdf only", "", null , null, pdfContent, false));
-		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content", "This is a mixed message", ccdaContent , null, pdfContent, false));
-		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content", "This is another mixed message", null , this.imageContent, null, false));
+		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content, ccda, pdf", "This is a mixed message", ccdaContent , null, pdfContent, false));
 
 		return retVal;
 	}
@@ -424,7 +429,7 @@ public class InteropTestResource
 	public Response testSendMessage(@Context UriInfo uriInfo, @PathParam("toAddress") String toAddress,
 			@DefaultValue("2") @PathParam("testTimeout") int testTimeout, @PathParam("reportAddress") String reportAddress) throws Exception
 	{
-		final TestSuite testSuite = dao.initiateTestSuite("ATAB Interop Message Receive Tests", toAddress, testTimeout);
+		final TestSuite testSuite = dao.initiateTestSuite("Bundle Testing Tool: Message Receive Tests", toAddress, testTimeout);
 		
 		InternetAddress to;
 		try
@@ -1051,8 +1056,37 @@ public class InteropTestResource
 		protected final PrivateKey signingKey;
 		protected File crlFile;
 		protected final Collection<X509Certificate> revokedCerts;
-		protected long crlNum = 1;
-		
+		protected long crlNum = 0;
+
+		public long getLatestCRLNumber(File crlFile){
+			long latestCrlNum = 0;
+			try {
+				InputStream inputStream = FileUtils.openInputStream(crlFile);
+
+				X509CRLParser crlParser = new X509CRLParser();
+
+				crlParser.engineInit(inputStream);
+
+				X509CRLObject crl = (X509CRLObject) crlParser.engineRead();
+
+
+
+				byte[] extensionValue = crl.getExtensionValue(Extension.cRLNumber.getId());
+				if (extensionValue != null) {
+					DEROctetString octetString = (DEROctetString) DEROctetString.fromByteArray(extensionValue);
+					ASN1Integer retrievedCRLNumber = ASN1Integer.getInstance(octetString.getOctets());
+					System.out.println("CRL Number from CRL: " + retrievedCRLNumber.getPositiveValue());
+					latestCrlNum = retrievedCRLNumber.getPositiveValue().longValue();
+				}
+				System.out.println("CRL Version: " + crl.getVersion());
+				System.out.println("Issuer: " + crl.getIssuerDN());
+				System.out.println("Number of revoked certificates: " + crl.getRevokedCertificates().size());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return latestCrlNum;
+		}
 		public CRLCreationTask(X509Certificate signingCert, PrivateKey signingKey, 
 				File crlFile, Collection<X509Certificate> revokedCerts)
 		{
@@ -1061,7 +1095,7 @@ public class InteropTestResource
 			this.crlFile = crlFile;
 			this.revokedCerts = revokedCerts;
 		}
-		
+
 		@Override
 		public void run()
 		{
@@ -1082,9 +1116,17 @@ public class InteropTestResource
 				
 				crlGen.addExtension(X509Extensions.AuthorityKeyIdentifier,
 		                false, new AuthorityKeyIdentifierStructure(signingCert));
-				
+
+				long latestCRLNumber = getLatestCRLNumber(crlFile);
+				LOGGER.warn("crlNum=" + crlNum);
+				LOGGER.warn("latestCRLNumber=" + latestCRLNumber);
+				/* Let's increment the latest crl number from the most recent CRL, instead of blindly increasing from 1 */
+				if( latestCRLNumber > 0)
+					crlNum = latestCRLNumber + 1;
+				else
+					crlNum++;
 				crlGen.addExtension(X509Extensions.CRLNumber,
-		                false, new CRLNumber(BigInteger.valueOf(crlNum++)));
+		                false, new CRLNumber(BigInteger.valueOf(crlNum)));
 				
 				//X509CRL crl = crlGen.generate(signingKey, CryptoExtensions.getJCEProviderName());
 				X509CRL crl = crlGen.generate(signingKey, BouncyCastleProvider.PROVIDER_NAME);

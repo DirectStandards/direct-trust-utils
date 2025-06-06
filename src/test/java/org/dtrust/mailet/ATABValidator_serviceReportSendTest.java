@@ -18,6 +18,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.dtrust.BaseTestPlan;
 import org.dtrust.InteropTestRunner;
 import org.dtrust.client.TestRegService;
@@ -175,5 +177,21 @@ public class ATABValidator_serviceReportSendTest
 				assertTrue(foundReportRecip);
 			}
 		}.perform();
-	}		
+	}
+
+
+	@Test
+	public void TestCustomAlgorithmFinder(){
+		ATABValidationReportAttr atabValidationReportAttr = new ATABValidationReportAttr();
+		String rsa_oaep = atabValidationReportAttr.customAlgorithmFinder(PKCSObjectIdentifiers.id_RSAES_OAEP);
+		System.out.println(rsa_oaep);
+		assertTrue( rsa_oaep.equals("RSAOAEP"));
+		String rsa_pkcsv15 = atabValidationReportAttr.customAlgorithmFinder(PKCSObjectIdentifiers.rsaEncryption);
+		assertTrue( rsa_pkcsv15.equals("RSAES-PKCS1-v1_5"));
+
+
+		//rsa_oaep = atabValidationReportAttr.customAlgorithmFinder(new ASN1ObjectIdentifier((PKCSObjectIdentifiers.id_RSAES_OAEP.toString())));
+		//rsa_pkcsv15 = atabValidationReportAttr.customAlgorithmFinder(new ASN1ObjectIdentifier((PKCSObjectIdentifiers.rsaEncryption.toString())));
+	}
+
 }

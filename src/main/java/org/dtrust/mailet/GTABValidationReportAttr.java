@@ -84,14 +84,13 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 		builder.append("Encryption Validation:\r\n");
 		if (encrReport != null)
 		{
-			DefaultAlgorithmNameFinder defaultAlgorithmNameFinder = new DefaultAlgorithmNameFinder();
-			builder.append("\tEnryption Validation Status: " + encrReport.encrValid + "\r\n");
+			builder.append("\tEncryption Validation Status: " + encrReport.encrValid + "\r\n");
 			//builder.append("\tEncryption Algorithm OID: " + encrReport.encouteredOID +  "(" +  getEncryptionAlgorithmFromOID(encrReport.encouteredOID) + ")\r\n");
-			builder.append("\tEncryption Algorithm OID: " + encrReport.encouteredOID +  "(" +  defaultAlgorithmNameFinder.getAlgorithmName(new ASN1ObjectIdentifier(encrReport.encouteredOID.toString())) + ")\r\n");
-			builder.append("\tKey Encryption Alorithm OID: " + encrReport.keyEncryptionOID + "(" +  defaultAlgorithmNameFinder.getAlgorithmName(new ASN1ObjectIdentifier(encrReport.keyEncryptionOID)) + ")\r\n");
+			builder.append("\tEncryption Algorithm OID: " + encrReport.encouteredOID +  "(" +  customAlgorithmFinder(new ASN1ObjectIdentifier(encrReport.encouteredOID.toString())) + ")\r\n");
+			builder.append("\tKey Encryption Algorithm OID: " + encrReport.keyEncryptionOID + "(" +  customAlgorithmFinder(new ASN1ObjectIdentifier(encrReport.keyEncryptionOID)) + ")\r\n");
 			if( encrReport.keyEncryptionDigestOID != null) {
 				//builder.append("\tKey Encryption Digest: " + encrReport.keyEncryptionDigestOID + "(" + getKeyEncryptionDigest(encrReport.keyEncryptionDigestOID) + ")\r\n");
-				builder.append("\tKey Encryption Digest: " + encrReport.keyEncryptionDigestOID + "(" + defaultAlgorithmNameFinder.getAlgorithmName(new ASN1ObjectIdentifier(encrReport.keyEncryptionDigestOID)) + ")\r\n");
+				builder.append("\tKey Encryption Digest: " + encrReport.keyEncryptionDigestOID + "(" + customAlgorithmFinder(new ASN1ObjectIdentifier(encrReport.keyEncryptionDigestOID)) + ")\r\n");
 			}
 			if( encrReport.keyEncryptionMaskGenerationAlgorithmOID != null) {
 				builder.append("\tKey Encryption Mask Generation Algorithm: " + encrReport.keyEncryptionMaskGenerationAlgorithmOID + "(" + getMaskFunctionGeneratorFromOID(encrReport.keyEncryptionMaskGenerationAlgorithmOID) + ")\r\n");
@@ -108,7 +107,7 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 		{
 			builder.append("\tDigital Signature Validation Status: " + digSigReport.digSigValid + "\r\n");
 			builder.append("\tDigital Signature Validation Status: " + digSigReport.digSigValid + "\r\n");
-			builder.append("\tDigest Alorithm OID: " + digSigReport.encouteredOID + " (" + getKeyEncryptionDigest(digSigReport.encouteredOID) + ")\r\n");
+			builder.append("\tDigest Algorithm OID: " + digSigReport.encouteredOID + " (" + getKeyEncryptionDigest(digSigReport.encouteredOID) + ")\r\n");
 			builder.append("\tComments: " + digSigReport.comment + "\r\n\r\n");
 		}
 		else
@@ -140,7 +139,7 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 
 	public static String getKeyEncryptionAlgorithmFromOID(String oid){
 		if( oid.equals(PKCSObjectIdentifiers.id_RSAES_OAEP.toString()))
-			return "RSAOAEP";
+			return "RSAES-OAEP";
 		if( oid.equals(PKCSObjectIdentifiers.rsaEncryption.toString()))
 			return "RSAES-PKCS1-v1_5";
 		return "unknown key encryption algorithm";
@@ -174,4 +173,14 @@ public class GTABValidationReportAttr extends ValidationReportAttr
 
 		return "Unknown MFG: " + mfgOID;
 	}
+
+	public String customAlgorithmFinder(ASN1ObjectIdentifier asn1ObjectIdentifier){
+		DefaultAlgorithmNameFinder defaultAlgorithmNameFinder = new DefaultAlgorithmNameFinder();
+		String algorithmName = defaultAlgorithmNameFinder.getAlgorithmName(asn1ObjectIdentifier);
+		System.out.println("algorithmName=" + algorithmName);
+		if( asn1ObjectIdentifier.getId().equals(PKCSObjectIdentifiers.rsaEncryption.getId()))
+			algorithmName = "RSAES-PKCS1-v1_5";
+		return algorithmName;
+	}
+
 }

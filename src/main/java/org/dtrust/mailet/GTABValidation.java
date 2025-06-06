@@ -16,6 +16,9 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.dtrust.client.TestRegService;
 import org.dtrust.client.impl.TestRegServiceImpl;
 import org.dtrust.dao.interoptest.entity.TestRegistration;
@@ -167,4 +170,8 @@ public class GTABValidation extends AbstractValidation
 		}
 		return retVal.values();
 	}
+
+
+
+
 }

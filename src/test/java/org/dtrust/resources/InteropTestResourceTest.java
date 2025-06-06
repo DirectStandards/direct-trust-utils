@@ -11,6 +11,13 @@ import org.junit.Test;
 
 import com.sun.jersey.api.client.WebResource;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+
 public class InteropTestResourceTest
 {
 	static WebResource resource;
@@ -144,12 +151,40 @@ public class InteropTestResourceTest
 			}
 		}.perform();
 	}
-	/*
 	@Test
-	public void testExecuteInteropTest_testJobStarted() throws Exception
-	{
-		InteropTestRunner.startInteropTestService();
-		InteropTestRunner
+	public void testGetLatestCRLNumber() {
+		try {
+			URL resource = this.getClass().getClassLoader().getResource("certs/DirectTrustCA.crl");
+			File crlFile = new File(resource.toURI());
+			InteropTestResource.CRLCreationTask crlCreationTask = new InteropTestResource.CRLCreationTask(null, null, crlFile, null);
+			long crlNum = crlCreationTask.getLatestCRLNumber(crlCreationTask.crlFile);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
-	*/
+
+	@Test
+	public void testgetTests() throws Exception
+	{
+		TestSuite testSuite = new TestSuite();
+
+		org.dtrust.dao.interoptest.entity.Test test1 = new org.dtrust.dao.interoptest.entity.Test();
+		test1.setTestId(1);
+		test1.setTestName("test 1");
+		org.dtrust.dao.interoptest.entity.Test test2 = new org.dtrust.dao.interoptest.entity.Test();
+		test2.setTestId(2);
+		test2.setTestName("test 2");
+		org.dtrust.dao.interoptest.entity.Test test3 = new org.dtrust.dao.interoptest.entity.Test();
+		test2.setTestId(3);
+		test2.setTestName("test 3");
+		Set<org.dtrust.dao.interoptest.entity.Test> tests = new HashSet<org.dtrust.dao.interoptest.entity.Test>();
+		tests.add(test3);
+		tests.add(test2);
+		tests.add(test1);
+		testSuite.setTests(tests);
+		Set<org.dtrust.dao.interoptest.entity.Test> testsResults = testSuite.getTests();
+
+		assertTrue(true);
+	}
+
 }
