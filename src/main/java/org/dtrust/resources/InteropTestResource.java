@@ -789,6 +789,8 @@ public class InteropTestResource
 					rsaOAEPSHA256Test.setComments("Messaging test aborted: " + e.getMessage());
 					dao.updateTest(rsaOAEPSHA256Test);
 				}
+/* below tests are commented out for now per lisa and Alex 6/17/2025
+
 
 				// RSA-OAEP with SHA-384 Digest
 				ignoreTestResults = true;
@@ -858,7 +860,7 @@ public class InteropTestResource
 					dao.updateTest(rsaOAEPSHA512Test);
 				}
 
-
+ */
 				// now do the negative tests
 
 	
