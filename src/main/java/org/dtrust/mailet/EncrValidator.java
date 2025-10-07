@@ -12,12 +12,21 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DLSequence;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.RSAESOAEPparams;
+import org.bouncycastle.cms.CMSSignedDataGenerator;
 import org.bouncycastle.cms.RecipientId;
 import org.bouncycastle.cms.RecipientInformation;
 import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.mail.smime.SMIMEEnveloped;
-import org.nhind.config.ConfigurationServiceProxy;
-import org.nhindirect.gateway.smtp.config.cert.impl.ConfigServiceCertificateStore;
+//import org.nhind.config.ConfigurationServiceProxy;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
+import org.nhind.config.rest.CertificateService;
+//import org.nhindirect.gateway.smtp.config.cert.impl.ConfigServiceCertificateStore;
+import org.nhindirect.gateway.smtp.config.cert.impl.ConfigServiceRESTCertificateStore;
 import org.nhindirect.stagent.NHINDAddressCollection;
 import org.nhindirect.stagent.cert.CertificateStore;
 import org.nhindirect.stagent.cryptography.EncryptionAlgorithm;
@@ -56,8 +65,10 @@ public class EncrValidator
 		store = newStore;
 	}
 	
-	public static final GTABValidationReportAttr validateEncryption(Message msg, GTABValidationReportAttr report, 
-			NHINDAddressCollection recips, ConfigurationServiceProxy proxy, boolean validateCertKeyUsage)
+//	public static final GTABValidationReportAttr validateEncryption(Message msg, GTABValidationReportAttr report,
+//																	NHINDAddressCollection recips, ConfigurationServiceProxy proxy, boolean validateCertKeyUsage)
+	public static final GTABValidationReportAttr validateEncryption(Message msg, GTABValidationReportAttr report,
+																	NHINDAddressCollection recips, CertificateService certService, boolean validateCertKeyUsage)
 	{
 		// make sure it is encrypted
 		if (isEncrypted(msg))
@@ -79,7 +90,8 @@ public class EncrValidator
 
 
 				// get any certificates we may have for this message
-				final Collection<X509Certificate> possibleEncCerts = getRecipCerts(recips, proxy);
+				//final Collection<X509Certificate> possibleEncCerts = getRecipCerts(recips, proxy);
+				final Collection<X509Certificate> possibleEncCerts = getRecipCerts(recips, certService);
 
 				// makes sure that the sending system only encrypt with certificates that have the key encipherment bit
 				for (X509Certificate decryptCert : possibleEncCerts) {
@@ -95,7 +107,44 @@ public class EncrValidator
 					recipients.getRecipients().iterator().next();
 					RecipientInformation recipientInformation = (RecipientInformation) recipients.getRecipients().iterator().next();
 					encrReport.keyEncryptionOID = recipientInformation.getKeyEncryptionAlgOID();
+					if( encrReport.keyEncryptionOID.equals(PKCSObjectIdentifiers.id_RSAES_OAEP.toString())){
+						// Pick off the digest algorithm
+						DefaultAlgorithmNameFinder defaultAlgorithmNameFinder = new DefaultAlgorithmNameFinder();
+						LOGGER.info("Decrypting: Key encryption algorithm is " + defaultAlgorithmNameFinder.getAlgorithmName(recipient.getKeyEncryptionAlgorithm()) + "(" + recipient.getKeyEncryptionAlgorithm().getAlgorithm().getId() + ")");
+						if( recipient.getKeyEncryptionAlgorithm().getParameters() != null){
+								ASN1Encodable asn1Encodable = recipient.getKeyEncryptionAlgorithm().getParameters();
+								RSAESOAEPparams rsaesoaePparams = null;
+								if( asn1Encodable instanceof DERSequence) {
+									DERSequence derSequence = (DERSequence) asn1Encodable;
+									rsaesoaePparams = RSAESOAEPparams.getInstance(derSequence);
+								}
+								if( asn1Encodable instanceof DLSequence) {
+									DLSequence dlSequence = (DLSequence) asn1Encodable;
+									rsaesoaePparams = RSAESOAEPparams.getInstance(dlSequence);
+								}
+								if( rsaesoaePparams != null){
+									LOGGER.info("Decrypting: Key encryption algorithm parameters: Hash Algorithm: " + rsaesoaePparams.getHashAlgorithm().getAlgorithm().getId() + " Mask Gen Algorithm: " + rsaesoaePparams.getMaskGenAlgorithm().getAlgorithm().getId() + " P Source Algorithm: " + rsaesoaePparams.getPSourceAlgorithm().getAlgorithm().getId());
+                                /*
+                                RSAES-OAEP-params ::= SEQUENCE {
+                                    hashAlgorithm [0] HashAlgorithm DEFAULT sha1,
+                                    maskGenAlgorithm [1] MaskGenAlgorithm DEFAULT mgf1SHA1,
+                                    pSourceAlgorithm [2] PSourceAlgorithm DEFAULT pSpecifiedEmpty
+                                }
+                                 */
+									encrReport.keyEncryptionDigestOID = rsaesoaePparams.getHashAlgorithm().getAlgorithm().getId();
+									encrReport.keyEncryptionMaskGenerationAlgorithmOID = rsaesoaePparams.getMaskGenAlgorithm().getAlgorithm().getId();
+								} else {
+									// Set default values
+									encrReport.keyEncryptionDigestOID = CMSSignedDataGenerator.DIGEST_SHA1.toString();
+									encrReport.keyEncryptionMaskGenerationAlgorithmOID = PKCSObjectIdentifiers.id_mgf1.getId();
+								}
+						} else {
+							// Set default values
+							encrReport.keyEncryptionDigestOID = CMSSignedDataGenerator.DIGEST_SHA1.toString();
+							encrReport.keyEncryptionMaskGenerationAlgorithmOID = PKCSObjectIdentifiers.id_mgf1.getId();
+						}
 
+					}
 					if (validateCertKeyUsage) {
 						// this certificate is in the message
 						// validate that the sender only uses certificates that assert
@@ -160,12 +209,14 @@ public class EncrValidator
 		
 		return true;
 	}
-	
-	public static Collection<X509Certificate> getRecipCerts(NHINDAddressCollection recips, ConfigurationServiceProxy proxy)
+
+	public static Collection<X509Certificate> getRecipCerts(NHINDAddressCollection recips, CertificateService certService )
+	//public static Collection<X509Certificate> getRecipCerts(NHINDAddressCollection recips, ConfigurationServiceProxy proxy )
 	{
 		final Collection<X509Certificate> retVal = new ArrayList<X509Certificate>();
 		
-		final CertificateStore certStore = (store == null) ? new ConfigServiceCertificateStore(proxy) : store;
+		//final CertificateStore certStore = (store == null) ? new ConfigServiceCertificateStore(proxy) : store;
+		final CertificateStore certStore = (store == null) ? new ConfigServiceRESTCertificateStore(certService) : store;
 		
 		for (InternetAddress recip : recips.toInternetAddressCollection())
 		{
@@ -213,8 +264,8 @@ public class EncrValidator
 
 	    		retVal = loadClass.newInstance();
 	    		
-	    		retVal.setSerialNumber(decryptCert.getSerialNumber());
-	    		retVal.setIssuer(decryptCert.getIssuerX500Principal().getEncoded());
+	    		//retVal.setSerialNumber(decryptCert.getSerialNumber());
+	    		//retVal.setIssuer(decryptCert.getIssuerX500Principal().getEncoded());
     		}
         	catch (Throwable e)
         	{

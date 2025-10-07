@@ -18,6 +18,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dtrust.client.TestRegService;
 import org.dtrust.client.impl.TestRegServiceImpl;
 import org.dtrust.dao.interoptest.entity.TestRegistration;
+import org.nhind.config.rest.CertificateService;
 import org.nhindirect.common.rest.BootstrapBasicAuthServiceSecurityManager;
 import org.nhindirect.common.rest.HttpClientFactory;
 import org.nhindirect.common.rest.ServiceSecurityManager;
@@ -25,13 +26,15 @@ import org.nhindirect.stagent.NHINDAddressCollection;
 import org.nhindirect.stagent.mail.MailStandard;
 import org.nhindirect.stagent.mail.Message;
 import org.nhindirect.stagent.mail.MimeEntity;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class ATABValidation extends AbstractValidation
 {
-	private static final Log LOGGER = LogFactory.getFactory().getInstance(ATABValidation.class);	
+	private static final Log LOGGER = LogFactory.getFactory().getInstance(ATABValidation.class);
 	
 	protected TestRegService service;
-	
+
 	@Override
 	public void init() throws MessagingException
 	{
@@ -63,15 +66,25 @@ public class ATABValidation extends AbstractValidation
 		final ServiceSecurityManager mgr = new BootstrapBasicAuthServiceSecurityManager(testRegUsername, testRegPassword);
 		
 		service = new TestRegServiceImpl(testRegServiceBaseURL, HttpClientFactory.createHttpClient(), mgr);
+
+		ctx = createSpringApplicationContext();
+
+		certificateService = ctx.getBean(CertificateService.class);
 	}
-	
+	@Override
+	protected ApplicationContext createSpringApplicationContext()
+	{
+		return new ClassPathXmlApplicationContext("contexts/STAMailet.xml");
+	}
+
 	@Override
 	protected ValidationReportAttr validateMessageAttributes(Message msg, NHINDAddressCollection recips)
 	{
 		GTABValidationReportAttr reportAttr = new ATABValidationReportAttr();
 
 		// validate the encryption requirements
-		reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, proxy, false);
+		reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, certificateService, false);
+		//reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, proxy, false);
 		if (!reportAttr.encrReport.encrValid)
 			return reportAttr; 			// bail 
 

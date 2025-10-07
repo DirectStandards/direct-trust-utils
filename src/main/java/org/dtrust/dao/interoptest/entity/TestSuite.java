@@ -1,9 +1,14 @@
 package org.dtrust.dao.interoptest.entity;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -112,14 +117,34 @@ public class TestSuite
 		this.updateCnt = updateCnt;
 	}
 
+
+	// Class 1
+// Helper class
+	class SortHelper implements Comparator<Test> {
+
+		// Method
+		// To compare two longs
+		public int compare(Test test1, Test test2)
+		{
+			Long test2Id = new Long(test2.getTestId());
+			Long test1Id = new Long(test1.getTestId());
+			return test1Id.compareTo(test2Id);
+		}
+	}
 	@OneToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "tests", joinColumns = @JoinColumn(name = "testSuiteId"), inverseJoinColumns = @JoinColumn(name = "testId"))
 	public Set<Test> getTests()
 	{
 		if (tests == null)
 			tests = new HashSet<Test>();
-		
 		return tests;
+	}
+
+	public TreeSet<Test> sortTests(Set<Test> tests)
+	{
+		TreeSet<Test> treeSet = new TreeSet<Test>(new SortHelper());
+		treeSet.addAll(tests);
+		return treeSet;
 	}
 
 	public void setTests(Set<Test> tests)
@@ -182,7 +207,7 @@ public class TestSuite
 			
 			int idx = 1;
 			int numTests = this.getTests().size();
-			for (Test test : this.getTests())
+			for (Test test : this.sortTests(getTests()))
 			{
 				builder.append("\r\nTest " + idx++ + " of " + numTests + "\r\n");
 				builder.append("\tTest name: " + test.getTestName() + "\r\n");

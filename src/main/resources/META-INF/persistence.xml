@@ -5,6 +5,14 @@
 	                   http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
 	version="1.0">
 	<persistence-unit name="dt-interop" transaction-type="RESOURCE_LOCAL">
+		<class>org.dtrust.dao.interoptest.entity.Test</class>
+		<class>org.dtrust.dao.interoptest.entity.TestRegistration</class>
+		<class>org.dtrust.dao.interoptest.entity.TestStatus</class>
+		<class>org.dtrust.dao.interoptest.entity.TestSuite</class>
+		<class>org.dtrust.dao.interoptest.entity.TestType</class>
+		<class>org.dtrust.dao.interoptest.entity.User</class>
+		<class>org.dtrust.dao.interoptest.entity.UserAccountStatus</class>
+		<class>org.dtrust.dao.interoptest.entity.UserRole</class>
 		<properties>
 			<property name="hibernate.hbm2ddl.auto" value="validate" />
 			<property name="hibernate.show_sql" value="false" />

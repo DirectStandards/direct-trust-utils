@@ -25,10 +25,21 @@ public class Test
 	private Calendar startDtTm;
 	private Calendar updateDtTm;
 	private int updateCnt;
+	private boolean ignoreTestResults;
+
+	public boolean isIgnoreTestResults() {
+		return ignoreTestResults;
+	}
+
+	public void setIgnoreTestResults(boolean ignoreTestResults) {
+		this.ignoreTestResults = ignoreTestResults;
+	}
+
+;
 	
 	public Test()
 	{
-		
+		ignoreTestResults = false;
 	}
 
     @Id
