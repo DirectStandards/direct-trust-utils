@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>direct-trust-utils</artifactId>    
     <name>DirectTrust Utility Functions and Modules</name>
-    <version>1.1</version>
+    <version>1.2.0-SNAPSHOT</version>
     <description>DirectTrust Utility Functions and Modules</description>
     <inceptionYear>2010</inceptionYear>
     <developers>
@@ -34,13 +34,19 @@
 		<dependency>
 		  <groupId>org.nhind</groupId>
 		  <artifactId>agent</artifactId>
-		  <version>8.0.1</version>
+		  <version>8.1.0</version>
 		</dependency>
 
 		<dependency>
 		  <groupId>org.nhind</groupId>
 		  <artifactId>gateway</artifactId>
 		  <version>6.0.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient-osgi</artifactId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 
 	  <dependency>
@@ -73,7 +79,7 @@
 	  <dependency>
 		  <groupId>org.nhind</groupId>
 		  <artifactId>direct-common</artifactId>
-		  <version>8.0.1</version>
+		  <version>8.1.0</version>
 		  <exclusions>
 			  <exclusion>
 				  <groupId>org.bouncycastle</groupId>
@@ -215,7 +221,12 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-oxm</artifactId>
 			<version>${spring.version}</version>
-		</dependency>			   
+		</dependency>		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-orm</artifactId>
+			<version>${spring.version}</version>
+		</dependency>				   
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-tx</artifactId>
@@ -313,6 +324,12 @@
 		  <artifactId>commons-lang</artifactId>
 		  <version>2.5</version>
 	  </dependency>
+		<dependency>
+		    <groupId>commons-dbcp</groupId>
+		    <artifactId>commons-dbcp</artifactId>
+		    <version>1.4</version>
+		    <scope>provided</scope>
+		</dependency>	  
   </dependencies>     
 	<dependencyManagement>
 		<dependencies>
@@ -349,12 +366,12 @@
 			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-core</artifactId>
-				<version>4.3.2.Final</version>
+				<version>3.3.2.GA</version>
 			</dependency>
 			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-entitymanager</artifactId>
-				<version>4.3.2.Final</version>
+				<version>3.3.2.GA</version>
 			</dependency>								
 		</dependencies>
 	</dependencyManagement>   
@@ -469,7 +486,7 @@
 	          <docfilessubdirs>true</docfilessubdirs>
               <detectJavaApiLink>true</detectJavaApiLink>
               <detectLinks>true</detectLinks>
-	          <source>1.6</source>
+	          <source>1.8</source>
 	          <show>public</show>
 	          <excludePackageNames>
 	              org.nhindirect.stagent.annotation:org.nhindirect.stagent.cert.impl:org.nhindirect.stagent.cert.impl.annotation:org.nhindirect.stagent.cert.impl.module:org.nhindirect.stagent.cert.impl.provider:org.nhindirect.stagent.cryptography.annotation:org.nhindirect.stagent.module:org.nhindirect.stagent.provider:org.nhindirect.stagent.trust.annotation:org.nhindirect.stagent.trust.provider:org.nhindirect.stagent.utils:org.nhindirect.stagent.policy.impl
@@ -554,7 +571,7 @@
 	          <docfilessubdirs>true</docfilessubdirs>
               <detectJavaApiLink>true</detectJavaApiLink>
               <detectLinks>true</detectLinks>
-	          <source>1.6</source>
+	          <source>1.8</source>
 	          <show>public</show>
 	          <excludePackageNames>
 	              org.nhindirect.stagent.annotation:org.nhindirect.stagent.cert.impl:org.nhindirect.stagent.cert.impl.annotation:org.nhindirect.stagent.cert.impl.module:org.nhindirect.stagent.cert.impl.provider:org.nhindirect.stagent.cryptography.annotation:org.nhindirect.stagent.module:org.nhindirect.stagent.provider:org.nhindirect.stagent.trust.annotation:org.nhindirect.stagent.trust.provider:org.nhindirect.stagent.utils:org.nhindirect.stagent.policy.impl
@@ -628,8 +645,8 @@
 		<spring.version>4.3.2.RELEASE</spring.version>
 
 		<spring.version>5.1.5.RELEASE</spring.version>
-
+	    <spring.version>5.3.8</spring.version>
 		-->
-	<spring.version>5.3.8</spring.version>
+        <spring.version>3.2.3.RELEASE</spring.version>
 	</properties>
 </project>

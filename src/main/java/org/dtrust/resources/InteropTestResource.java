@@ -123,7 +123,6 @@ public class InteropTestResource
 	@Qualifier("crlFile")
 	protected String crlFile;
 
-
 	@Autowired
 	@Qualifier("localDomain")
 	protected String localDomain;
@@ -131,11 +130,14 @@ public class InteropTestResource
 	@Autowired
 	@Qualifier("localSender")
 	protected InternetAddress localSender;
-	
-	@Autowired
+
 	@Qualifier("msgSender")
 	protected MessageSender msgSender;
-	
+
+    @Autowired
+    @Qualifier("ignoreOAEPTestResults")
+    protected String ignoreOAEPTestResults;
+
 	@Autowired()
 	protected InteropTestMonitorFactory testMonitorFactory;
 	
@@ -757,8 +759,8 @@ public class InteropTestResource
 				}
 
 				// RSA-OAEP with SHA-256 Digest
-				boolean ignoreTestResults = true;
-				final Test rsaOAEPSHA256Test = dao.initiateTest("Happy path,RSA-OAEP Key encryption SHA-256 digest", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid(), ignoreTestResults);
+                boolean ignoreTestResulst = Boolean.valueOf(ignoreOAEPTestResults);
+				final Test rsaOAEPSHA256Test = dao.initiateTest("Happy path,RSA-OAEP Key encryption SHA-256 digest", TestType.SEND_NORMAL_GOOD_MESSAGE, testSuite.getTestSuiteid(), ignoreTestResulst);
 				try
 				{
 					System.out.println("Test name: " + rsaOAEPSHA256Test.getTestName());
