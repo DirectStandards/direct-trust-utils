@@ -63,8 +63,11 @@
     <bean id="crlFile" class="java.lang.String" >
 		<constructor-arg value="${interopTestResource.crlFile}" />
 	</bean>
-    
-    
+
+    <bean id="ignoreOAEPTestResults" class="java.lang.String" >
+        <constructor-arg value="${interopTestResource.ignoreOAEPTestResults}" />
+    </bean>
+
 	<bean id="baseReturnURI" class="java.lang.String" >
 		<constructor-arg value="${userReg.returnURI}" />
 	</bean>

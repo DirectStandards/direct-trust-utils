@@ -41,7 +41,7 @@ public class EncrValidator
 	private static final Log LOGGER = LogFactory.getFactory().getInstance(EncrValidator.class);	
 	
 	private static CertificateStore store;
-	
+
 	static Map<String, String> validEncAlgs;
 	
 	static
@@ -68,7 +68,8 @@ public class EncrValidator
 //	public static final GTABValidationReportAttr validateEncryption(Message msg, GTABValidationReportAttr report,
 //																	NHINDAddressCollection recips, ConfigurationServiceProxy proxy, boolean validateCertKeyUsage)
 	public static final GTABValidationReportAttr validateEncryption(Message msg, GTABValidationReportAttr report,
-																	NHINDAddressCollection recips, CertificateService certService, boolean validateCertKeyUsage)
+																	NHINDAddressCollection recips, CertificateService certService, boolean validateCertKeyUsage,
+                                                                    boolean ignoreNonCompliantOAEPEncryption)
 	{
 		// make sure it is encrypted
 		if (isEncrypted(msg))
@@ -145,6 +146,16 @@ public class EncrValidator
 						}
 
 					}
+                    else {
+                         // The key encryption algorithm is not OAEP at this point.  Fail if the ignore OAEP compliance
+                         // flag is set to false
+                         if (!ignoreNonCompliantOAEPEncryption) {
+                             encrReport.encrValid = false;
+                             encrReport.comment = "The key encryption algorithm is not compliant OAEP requirements";
+                             report.encrReport = encrReport;
+                             return report;
+                         }
+                    }
 					if (validateCertKeyUsage) {
 						// this certificate is in the message
 						// validate that the sender only uses certificates that assert
