@@ -52,10 +52,16 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 	protected final static String REPORT_RECIP_PARAMS = "ValidationReportRecips";
 	
 	protected final static String REPORT_SENDER_PARAMS = "ValidationReportSender";
-	
+
+    protected final static String IGNORE_NON_COMPLIANT_OAEP_ENCRYPTION = "IgnoreNonCompliantOAEPEncryption";
+
 	protected Collection<InternetAddress> reportRecips;
 	
 	protected InternetAddress reportSender;
+
+    // Flag to toggle on and off enforcement of the OAEP encryption requirements which
+    // go into effect Jan 1 2026.
+    protected boolean ignoreNonCompliantOAEPEncryption;
 	
 	//protected ConfigurationServiceProxy proxy;
 	protected CertificateService certificateService;
@@ -112,8 +118,17 @@ public abstract class AbstractValidation extends AbstractNotificationAwareMailet
 			for (String recipAddr : recipAddresses)
 				reportRecips.add(new InternetAddress(recipAddr));
 		}
-		
 
+        // get the configuration for OAEP Encryption enforcement.  Default to true if not set
+        // for backward behavioural passivity.
+        final String ignoreOAEPParamValue = getMailetConfig().getInitParameter(IGNORE_NON_COMPLIANT_OAEP_ENCRYPTION);
+        if (StringUtils.isEmpty(ignoreOAEPParamValue))
+        {
+            LOGGER.info("Ignore OAEP enforcement parameter is not set.  Defaulting to true (will ignore enforcement)");
+            ignoreNonCompliantOAEPEncryption = true;
+        }
+        else
+            ignoreNonCompliantOAEPEncryption = Boolean.valueOf(ignoreOAEPParamValue);
 	}
 	/**
 	 * Creates a spring application context.

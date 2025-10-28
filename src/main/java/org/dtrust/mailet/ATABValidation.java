@@ -83,7 +83,7 @@ public class ATABValidation extends AbstractValidation
 		GTABValidationReportAttr reportAttr = new ATABValidationReportAttr();
 
 		// validate the encryption requirements
-		reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, certificateService, false);
+		reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, certificateService, false, this.ignoreNonCompliantOAEPEncryption);
 		//reportAttr = EncrValidator.validateEncryption(msg, reportAttr, recips, proxy, false);
 		if (!reportAttr.encrReport.encrValid)
 			return reportAttr; 			// bail 
