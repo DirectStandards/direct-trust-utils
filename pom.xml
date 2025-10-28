@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>direct-trust-utils</artifactId>    
     <name>DirectTrust Utility Functions and Modules</name>
-    <version>1.2.0</version>
+    <version>1.3.0-SNAPSHOT</version>
     <description>DirectTrust Utility Functions and Modules</description>
     <inceptionYear>2010</inceptionYear>
     <developers>
