@@ -64,6 +64,7 @@ import org.dtrust.dao.interoptest.entity.TestType;
 import org.dtrust.resources.utils.InteropTestMonitorFactory;
 import org.dtrust.resources.utils.MessageBuilderUtils;
 import org.dtrust.resources.utils.PrivateCertResolver;
+import org.dtrust.util.CertificateKeyExponentChecker;
 import org.dtrust.util.MessageSender;
 import org.nhindirect.policy.PolicyExpression;
 import org.nhindirect.policy.PolicyFilter;
@@ -520,6 +521,14 @@ public class InteropTestResource
 							certPolTest.setTestStatus(TestStatus.COMPLETED_FAIL);
 							certPolTest.setComments("Certificate with thumbprint " + Thumbprint.toThumbprint(toAddressCert).toString() + 
 									" is not compliant with bundle profile policies.");
+							break;
+						}
+						
+						if (!CertificateKeyExponentChecker.isPublicKeyExponentValid(toAddressCert)) {
+							allCompliant = false;
+							certPolTest.setTestStatus(TestStatus.COMPLETED_FAIL);
+							certPolTest.setComments("Certificate with thumbprint " + Thumbprint.toThumbprint(toAddressCert).toString() + 
+									" has a non-compliant public key exponent.");
 							break;
 						}
 					}
