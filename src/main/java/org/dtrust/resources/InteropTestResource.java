@@ -171,7 +171,7 @@ public class InteropTestResource
 		
 		//crypto = new SMIMECryptographerImpl();
 
-		crypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_PKCS1_V15, null);
+		crypto = new SMIMECryptographerImpl(EncryptionAlgorithm.AES128, DigestAlgorithm.SHA256WITHRSA , EncryptionAlgorithm.RSA_OAEP, DigestAlgorithm.SHA1);
 
 
 		InputStream ioStream = null;
