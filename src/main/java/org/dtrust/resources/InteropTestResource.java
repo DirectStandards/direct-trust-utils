@@ -303,11 +303,11 @@ public class InteropTestResource
 		
 		// hard code for now
 
-		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, text only", "This is a test message.", null , null, null, false));
+		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, text only", "This is a test message for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", null , null, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, c-cda only", "", ccdaContent , null, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, image only", "", null , imageContent, null, false));
 		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, pdf only", "", null , null, pdfContent, false));
-		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content, ccda, pdf", "This is a mixed message", ccdaContent , null, pdfContent, false));
+		retVal.add(MessageBuilderUtils.createMimeMessage(Arrays.asList(to), localSender, "Happy path, mixed content, ccda, pdf", "This is a mixed message for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", ccdaContent , null, pdfContent, false));
 
 		return retVal;
 	}
@@ -596,7 +596,7 @@ public class InteropTestResource
 						
 						// send a message with a good and bad cert
 						final MimeMessage goodBadCertMsg = MessageBuilderUtils.createMimeMessage(
-								Arrays.asList(to), localSender, "Happy path, multi certs (non trusted cert)", "This is a test message.", null , null, null, false);
+								Arrays.asList(to), localSender, "Happy path, multi certs (non trusted cert)", "This is a test message for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", null , null, null, false);
 	
 						System.out.println("Initial message id: " + goodBadCertMsg.getMessageID());
 						
@@ -628,7 +628,7 @@ public class InteropTestResource
 						
 						// send a message with a good and bad cert
 						final MimeMessage goodBadCertMsg = MessageBuilderUtils.createMimeMessage(
-								Arrays.asList(to), localSender, "Happy path, multi certs (non trusted cert, reverse signature order)", "This is a test message.", null , null, null, false);
+								Arrays.asList(to), localSender, "Happy path, multi certs (non trusted cert, reverse signature order)", "This is a test message for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", null , null, null, false);
 	
 						System.out.println("Initial message id: " + goodBadCertMsg.getMessageID());
 						
@@ -660,7 +660,7 @@ public class InteropTestResource
 
 						// send a message with a good and bad cert
 						final MimeMessage goodBadCertMsg = MessageBuilderUtils.createMimeMessage(
-								Arrays.asList(to), localSender, "Happy path, multi certs (expired cert)", "This is a test message.", null , null, null, false);
+								Arrays.asList(to), localSender, "Happy path, multi certs (expired cert)", "This is a test message for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", null , null, null, false);
 	
 						System.out.println("Initial message id: " + goodBadCertMsg.getMessageID());
 						
@@ -694,7 +694,7 @@ public class InteropTestResource
 						
 						// send a message with a good and bad cert
 						final MimeMessage reliableMsg = MessageBuilderUtils.createMimeMessage(
-								Arrays.asList(to), localSender, deliveryNoteTest.getTestName(), "This is a reliable test message.", ccdaContent , null, null, true);
+								Arrays.asList(to), localSender, deliveryNoteTest.getTestName(), "This is a reliable test message for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", ccdaContent , null, null, true);
 	
 						
 						System.out.println("Initial message id: " + reliableMsg.getMessageID());
@@ -742,7 +742,7 @@ public class InteropTestResource
 
 					// send a message with a good and bad cert
 					final MimeMessage rsaOAEPMsg = MessageBuilderUtils.createMimeMessage(
-							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-1 digest", "This is a test message using RSA OAEP Key encryption, SHA-1 digest", null , null, null, false);
+							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-1 digest", "This is a test message using RSA OAEP Key encryption, SHA-1 digest for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", null , null, null, false);
 
 					System.out.println("Initial message id: " + rsaOAEPMsg.getMessageID());
 
@@ -776,7 +776,7 @@ public class InteropTestResource
 
 					// send a message with a good and bad cert
 					final MimeMessage rsaOAEPMsg = MessageBuilderUtils.createMimeMessage(
-							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-256 digest", "This is a test message using RSA OAEP Key encryption, SHA-256 digest", null , null, null, false);
+							Arrays.asList(to), localSender, "Happy path,RSA-OAEP Key encryption SHA-256 digest", "This is a test message using RSA OAEP Key encryption, SHA-256 digest for DirectTrust ATAB testing.  If you feel you received this message erroneous, please contact admin@directtrust.org", null , null, null, false);
 
 					System.out.println("Initial message id: " + rsaOAEPMsg.getMessageID());
 
